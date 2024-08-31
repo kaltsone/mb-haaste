@@ -80,7 +80,6 @@ routes.get('/api/customers/:customerId/contacts', async (req, res) => {
    */
   const { customerId } = req.params
   const customerContacts = await CustomerContacts.getAll(customerId)
-  console.log(customerContacts)
   if (!customerContacts) {
     throw new NotFound(`No customer contacts found for ${customerId}`)
   }
@@ -91,7 +90,54 @@ routes.get('/api/customers/:customerId/contacts', async (req, res) => {
 // MB-TODO: Write a SQL query in comment how to upsert a contacts to a customer using provided database pseudo schema
 // MB-TODO: Create route for adding contact to a customer `/api/customers/:customerId/contacts`
 routes.post('/api/customers/:customerId/contacts', async (req, res) => {
-  throw new NotImplemented()
+  /**
+   * MERGE INTO contact as Target
+      USING (
+        SELECT contact_id, first_name, last_name
+        FROM (VALUES (?, ?, ?))
+        AS vals (contact_id, first_name, last_name)
+        ) AS Source
+        ON (source.contact_id = Target.contact_id)
+        WHEN NOT MATCHED THEN
+          INSERT (contact_id, first_name, last_name)
+          VALUES (?, ?, ?)
+        WHEN MATCHED THEN
+          UPDATE SET
+            first_name = ?,
+              last_name = ?;
+              
+      -- Upsert data to customer_contact
+      MERGE INTO customer_contact as Target
+      USING (
+        SELECT customer_id, contact_id
+        FROM (VALUES (?, ?))
+        AS vals (customer_id, contact_id)
+        ) AS Source
+      ON (source.contact_id = Target.contact_id)
+      WHEN NOT MATCHED THEN
+        INSERT (customer_id, contact_id)
+        VALUES (?, ?);
+          
+      SELECT cn.contact_id, cn.first_name, cn.last_name
+      FROM contact cn
+      JOIN customer_contact cc ON cn.contact_id = cc.contact_id
+      WHERE cc.customer_id = ?;
+
+      NOTE: To improve, implement TRANSACTION to confirm each query was succesfull and the db doesn't break
+   */
+  const { customerId } = req.params
+  const { contactId, firstName, lastName } = req.body // contactId can be null
+  if (!contactId) {
+    const contact = await Contacts.add(req.body)
+    CustomerContacts.add(customerId, contact.id)
+    return res.send(contact)
+  }
+  const contact = await Contacts.get(contactId)
+  if (!contact) {
+    throw new NotFound(`Contact not found with id ${contactId}`)
+  }
+  CustomerContacts.add(customerId, contact.id)
+  return res.send(contact)
 })
 
 // MB-TODO: Write a SQL query in comment how to delete a contact of customer using provided database pseudo schema
