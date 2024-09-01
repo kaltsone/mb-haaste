@@ -128,11 +128,14 @@ routes.post('/api/customers/:customerId/contacts', async (req, res) => {
   const { customerId } = req.params
   const { contactId, firstName, lastName } = req.body // contactId can be null
   if (!contactId) {
+    // If no contact ID given, create a new contact
     const contact = await Contacts.add({ firstName, lastName })
+    // Add new contact to customer's contacts
     CustomerContacts.add(customerId, contact.id)
     return res.send(contact)
   }
   const contact = await Contacts.get(contactId)
+  // Contact ID given, get it from database
   if (!contact) {
     throw new NotFound(`Contact not found with id ${contactId}`)
   }
@@ -143,7 +146,22 @@ routes.post('/api/customers/:customerId/contacts', async (req, res) => {
 // MB-TODO: Write a SQL query in comment how to delete a contact of customer using provided database pseudo schema
 // MB-TODO:s Create route for deleting contact of customer `/api/customers/:customerId/contacts/:contactId`
 routes.delete('/api/customers/:customerId/contacts/:contactId', async (req, res) => {
-  throw new NotImplemented()
+  /*
+  DELETE FROM customer_contact WHERE customer_id = ? AND contact_id = ?;
+
+  SELECT cn.contact_id, cn.first_name, cn.last_name
+  FROM contact cn
+  JOIN customer_contact cc ON cn.contact_id = cc.contact_id
+  WHERE cc.customer_id = ?;
+
+  NOTE: To improve this query, check if any other customer has this contact, and if not, the contact can be deleted completely
+  **/
+  const { customerId, contactId } = req.params
+  CustomerContacts.delete(customerId, contactId)
+  // get customer's currect contacts and return them to client
+  const customerContacts = await CustomerContacts.getAll(customerId)
+  const contacts = customerContacts.map((c) => Contacts.get(c.contactId))
+  return res.send(contacts)
 })
 
 export default routes
