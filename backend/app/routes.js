@@ -128,7 +128,7 @@ routes.post('/api/customers/:customerId/contacts', async (req, res) => {
   const { customerId } = req.params
   const { contactId, firstName, lastName } = req.body // contactId can be null
   if (!contactId) {
-    const contact = await Contacts.add(req.body)
+    const contact = await Contacts.add({ firstName, lastName })
     CustomerContacts.add(customerId, contact.id)
     return res.send(contact)
   }
