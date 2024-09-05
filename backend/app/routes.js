@@ -39,7 +39,7 @@ routes.put('/api/customers/:customerId', async (req, res) => {
   if ("id" in req.body && req.body.id !== customer.id) {
     throw new NotAllowed('Updating customer ID is not allowed')
   }
-  const customers = Customers.update(customer.id, req.body)
+  const customers = await Customers.update(customer.id, req.body)
   return res.send(customers)
 })
 
@@ -83,7 +83,7 @@ routes.get('/api/customers/:customerId/contacts', async (req, res) => {
   if (!customerContacts) {
     throw new NotFound(`No customer contacts found for ${customerId}`)
   }
-  const contacts = customerContacts.map((c) => Contacts.get(c.contactId))
+  const contacts = await Promise.all(customerContacts.map(async (c) => await Contacts.get(c.contactId)))
   return res.send(contacts)
 })
 
@@ -126,18 +126,18 @@ routes.post('/api/customers/:customerId/contacts', async (req, res) => {
       NOTE: To improve, implement TRANSACTION to confirm each query was succesfull and the db doesn't break
    */
   const { customerId } = req.params
-  const { contactId, firstName, lastName } = req.body // contactId can be null
-  if (!contactId) {
+  const { id, firstName, lastName } = req.body // contactId can be null
+  if (!id) {
     // If no contact ID given, create a new contact
     const contact = await Contacts.add({ firstName, lastName })
     // Add new contact to customer's contacts
     CustomerContacts.add(customerId, contact.id)
     return res.send(contact)
   }
-  const contact = await Contacts.get(contactId)
+  const contact = await Contacts.get(id)
   // Contact ID given, get it from database
   if (!contact) {
-    throw new NotFound(`Contact not found with id ${contactId}`)
+    throw new NotFound(`Contact not found with id ${id}`)
   }
   CustomerContacts.add(customerId, contact.id)
   return res.send(contact)
