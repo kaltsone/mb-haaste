@@ -1,45 +1,12 @@
-import { useEffect } from 'react'
 import CustomerTable from './CustomerTable'
 import ContactTable from './ContactTable'
 import CustomerContactTable from './CustomerContactTable'
 import { useParams } from 'react-router-dom'
 import MBTodo from './MBTodo'
-import { useDispatch, useSelector } from 'react-redux'
-import { fetchCustomerById, fetchCustomers } from './customerSlices'
-import { fetchContacts } from './contactSlices'
+import { useDispatch } from 'react-redux'
+import { updateCustomer } from './customerSlices'
+import { useCustomer, useCustomers, useContacts } from './hooks'
 import NewCustomer from './NewCustomer'
-
-const useCustomers = () => {
-  const dispatch = useDispatch()
-  useEffect(() => {
-    dispatch(fetchCustomers())
-  }, [dispatch])
-  const refetch = () => dispatch(fetchCustomers())
-  const { data, status, error } = useSelector(state => state.customers)
-  return { data, status, error, refetch }
-}
-
-const useCustomer = (id) => {
-  const dispatch = useDispatch()
-  useEffect(() => {
-    if(id) {
-      dispatch(fetchCustomerById(id))
-    }
-  }, [id, dispatch])
-  const { data: customers, status, error } = useSelector(state => state.customers)
-  const customer = customers.find(customer => customer.id === id)
-  return { data: customer, status, error }
-}
-
-const useContacts = () => {
-  const dispatch = useDispatch()
-  useEffect(() => {
-    dispatch(fetchContacts())
-  }, [dispatch])
-  const refetch = () => dispatch(fetchContacts())
-  const { data, status, error } = useSelector(state => state.contacts)
-  return { data, status, error, refetch }
-}
 
 export const Customers = () => {
   const { data: customers, status, error, refetch } = useCustomers()
@@ -70,13 +37,21 @@ export const Customers = () => {
 
 export const Customer = () => {
   const { customerId } = useParams()
-  const { data: customer } = useCustomer(customerId)
+  const { customer } = useCustomer(customerId)
+  const dispatch = useDispatch()
+
+  const toggleCustomerActivity = () => {
+    dispatch(updateCustomer({ id: customerId, data: { id: customer.id, name: customer.name, country: customer.country, isActive: !customer.isActive } }))
+  }
+
+
   return (
     <div className='m-5'>
       <h1 className='fw-bold'>Customer</h1>
       {customer
         ? <div>
           <form className='mb-5' onSubmit={event => {
+            toggleCustomerActivity()
             // MB-TODO: Handle customer update
             event.preventDefault()
           }}>
@@ -97,14 +72,14 @@ export const Customer = () => {
                 <input className="form-control" id="isActive" value={customer.isActive ? 'Active' : 'Inactive'} />
               </div>
             </div>
-            <button className='btn btn-primary' type='submit'>Save</button>
+            <button className='btn btn-primary' type='submit'>Set {!customer.isActive ? 'Active' : 'Inactive'}</button>
           </form>
           <div>
             <p className='fw-bold'>Customer contacts</p>
             <MBTodo
               isCompleted={false}
               task='Continue CustomerContact table implementation' />
-            <CustomerContactTable customerId={customerId} />
+            <CustomerContactTable customerContacts={customer.contacts} customerId={customerId} />
           </div>
         </div>
         : null
