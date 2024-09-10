@@ -160,7 +160,7 @@ routes.delete('/api/customers/:customerId/contacts/:contactId', async (req, res)
   CustomerContacts.delete(customerId, contactId)
   // get customer's currect contacts and return them to client
   const customerContacts = await CustomerContacts.getAll(customerId)
-  const contacts = customerContacts.map((c) => Contacts.get(c.contactId))
+  const contacts = await Promise.all(customerContacts.map(async (c) => await Contacts.get(c.contactId)))
   return res.send(contacts)
 })
 
