@@ -1,13 +1,28 @@
+import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types'
 import { useNavigate } from 'react-router-dom';
 import MBTodo from './MBTodo';
 
 const Table = ({ customers }) => {
   const navigate = useNavigate();
+  const [filterActive, setFilterActive] = useState(null);
 
   const clicker = (customer) => {
     navigate(customer.id);
   }
+
+  const toggleFilter = () => {
+    setFilterActive(previousState => {
+      if (previousState === null) return true;
+      if (previousState === true) return false;
+      return null;
+    })
+  }
+
+  const filteredCustomers = customers.filter(customer => {
+    if (filterActive === null) return customer;
+    return customer.isActive === filterActive;
+  })
 
   return (
     <>
@@ -17,7 +32,7 @@ const Table = ({ customers }) => {
           {' '}
           Filters
           <div>
-            <MBTodo isCompleted={false} task='Create solution to filters customers by activity' />
+            <MBTodo isCompleted={true} task='Create solution to filters customers by activity' />
           </div>
         </div>
       </div>
@@ -27,11 +42,15 @@ const Table = ({ customers }) => {
             <th scope="col">#</th>
             <th scope="col">Name</th>
             <th scope="col">Country</th>
-            <th scope="col">Is Active</th>
+            <th scope="col" type='button' onClick={() => toggleFilter()}>
+              <i class="bi bi-funnel"></i>
+              {' '}
+              Is Active
+            </th>
           </tr>
         </thead>
         <tbody>
-          {customers.map((customer, index) => {
+          {filteredCustomers.map((customer, index) => {
             return (
               <tr
                 key={index}
