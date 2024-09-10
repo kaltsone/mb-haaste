@@ -4,7 +4,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import { useDispatch } from 'react-redux';
 import { useContacts } from './hooks';
-import { createCustomerContact } from './customerSlices';
+import { createCustomerContact, deleteCustomerContact } from './customerSlices';
 
 const Table = ({ customerContacts, customerId }) => {
   const dispatch = useDispatch();
@@ -15,6 +15,10 @@ const Table = ({ customerContacts, customerId }) => {
   // MB-TODO: Implement remove contact of customer
   const addContact = (contactData) => {
     dispatch(createCustomerContact({ id: customerId, data: contactData }))
+  }
+
+  const deleteContact = (contactId) => {
+    dispatch(deleteCustomerContact({ id: customerId, contactId: contactId }))
   }
 
   return (
@@ -35,6 +39,7 @@ const Table = ({ customerContacts, customerId }) => {
               <td>
                 <button
                   className='btn btn-danger'
+                  onClick={() => deleteContact(customerContact.id)}
                 >
                   Delete
                 </button>
@@ -58,7 +63,7 @@ const Table = ({ customerContacts, customerId }) => {
               <td>
                 <div className="dropdown">
                   <button className="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                    Dropdown button
+                    Select from existing
                   </button>
                   <ul className="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                     {allContacts.map((contact, index) => {
@@ -67,6 +72,7 @@ const Table = ({ customerContacts, customerId }) => {
                       )
                     })}
                   </ul>
+                  {/* TODO: Add a possibility to manually create a new contact, which is then added to customer's contacts */}
                 </div>
               </td>
             </>

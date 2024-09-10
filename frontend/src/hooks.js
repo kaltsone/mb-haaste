@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { fetchCustomerById, fetchCustomers, fetchCustomerContacts, updateCustomer } from './customerSlices'
+import { fetchCustomerById, fetchCustomers, fetchCustomerContacts } from './customerSlices'
 import { fetchContacts } from './contactSlices'
 
 export const useCustomers = () => {
@@ -17,8 +17,7 @@ export const useCustomer = (id) => {
     const dispatch = useDispatch()
     useEffect(() => {
         if (id) {
-            dispatch(fetchCustomerById(id))
-            dispatch(fetchCustomerContacts(id))
+            dispatch(fetchCustomerById(id)).then(() => dispatch(fetchCustomerContacts(id)));
         }
     }, [id, dispatch])
     const { single: customer, status, error } = useSelector(state => state.customers)

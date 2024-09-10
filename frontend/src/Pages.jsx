@@ -56,7 +56,7 @@ export const Customer = () => {
             event.preventDefault()
           }}>
             <MBTodo
-              isCompleted={false}
+              isCompleted={true}
               task='Create solution to update customers `isActivity` field. NOTE: update api `/api/customer/:customerId` expects complete customer data to be sent along request body' />
             <div className='d-flex flex-row gap-4 mb-3'>
               <div>
@@ -77,7 +77,7 @@ export const Customer = () => {
           <div>
             <p className='fw-bold'>Customer contacts</p>
             <MBTodo
-              isCompleted={false}
+              isCompleted={true}
               task='Continue CustomerContact table implementation' />
             <CustomerContactTable customerContacts={customer.contacts} customerId={customerId} />
           </div>

@@ -123,7 +123,7 @@ const customersSlice = createSlice({
           state.status = 'idle'
           const { customerId, result: contactData } = action.payload;
           if (state.single?.contacts) {
-            state.single.contacts.concat(contactData)
+            state.single.contacts.push(contactData)
           } else {
             state.single.contacts = [contactData]
           }
@@ -151,15 +151,36 @@ const customersSlice = createSlice({
         if (state.status === 'pending' && state.currentRequestId === requestId) {
           state.status = 'idle'
           const { customerId, result: contactData } = action.payload;
-          if (state.single?.contacts) {
-            state.single.contacts.concat(contactData)
-          } else {
-            state.single.contacts = [contactData]
-          }
+          state.single.contacts = contactData
           state.currentRequestId = null
         }
       })
       .addCase(fetchCustomerContacts.rejected, (state, action) => {
+        const { requestId } = action.meta
+        if (state.status === 'pending' && state.currentRequestId === requestId) {
+          state.status = 'idle'
+          state.error = action.error
+          state.currentRequestId = null
+        }
+      })
+      // Delete customer contact
+      .addCase(deleteCustomerContact.pending, (state, action) => {
+        const { requestId } = action.meta
+        if (state.status === 'idle') {
+          state.status = 'pending'
+          state.currentRequestId = requestId
+        }
+      })
+      .addCase(deleteCustomerContact.fulfilled, (state, action) => {
+        const { requestId } = action.meta
+        if (state.status === 'pending' && state.currentRequestId === requestId) {
+          state.status = 'idle'
+          const { customerId, result: contactData } = action.payload;
+          state.single.contacts = contactData
+          state.currentRequestId = null
+        }
+      })
+      .addCase(deleteCustomerContact.rejected, (state, action) => {
         const { requestId } = action.meta
         if (state.status === 'pending' && state.currentRequestId === requestId) {
           state.status = 'idle'
@@ -228,6 +249,14 @@ export const fetchCustomerContacts = createAsyncThunk(
   'customerContacts/fetch',
   async (id) => {
     const result = await client(`/api/customers/${id}/contacts`)
+    return { customerId: id, result }
+  }
+)
+
+export const deleteCustomerContact = createAsyncThunk(
+  'customerContacts/delete',
+  async ({ id, contactId }) => {
+    const result = await client(`/api/customers/${id}/contacts/${contactId}`, { method: 'DELETE' })
     return { customerId: id, result }
   }
 )
